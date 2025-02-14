@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="/Users/edersonmarcellus/Downloads/cali" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1535"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="California" custom_title="0" dock_id="1" table="4,10:mainCalifornia"/><table title="California" custom_title="0" dock_id="2" table="4,10:mainCalifornia"/><dock_state state="000000ff00000000fd000000010000000200000774000003dffc0100000001fc00000000000007740000010100fffffffa000000010100000002fb000000160064006f0063006b00420072006f00770073006500310100000000ffffffff0000010100fffffffb000000160064006f0063006b00420072006f00770073006500320100000000ffffffff0000010100ffffff0000027e0000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="California" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort><column index="0" mode="0"/></sort><column_widths><column index="1" value="46"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 3*">/* 5 few rows of California */
+SELECT *
+FROM California
+LIMIT 5;
+
+/* Total area burned by cause */
+SELECT Cause, SUM(&quot;Area_Burned (Acres)&quot;) AS Total_Area_Burned
+FROM California
+GROUP BY Cause
+ORDER BY Total_Area_Burned DESC;
+
+/* Top 5 Most Destructive Wildfires (by Financial Loss) */
+SELECT Incident_ID, Date, Location,  &quot;Estimated_Financial_Loss (Million $)&quot; AS Estimated_Financial_Loss
+FROM California
+ORDER by Estimated_Financial_Loss DESC
+LIMIT 5;
+
+/* Average Number of Homes Destroyed by Cause */
+SELECT AVG(Homes_Destroyed) AS Avg_Homes_Destroyed
+FROM California
+GROUP BY Cause
+ORDER BY Avg_Homes_Destroyed DESC;
+
+/* Total Fatalities and Injuries by Year */
+SELECT substr(Date, 1, 4) AS Year, 
+       SUM(Fatalities) AS Total_Fatalities, 
+       SUM(Injuries) AS Total_Injuries
+FROM California
+GROUP BY substr(Date, 1, 4)
+ORDER BY Year;
+
+/*Count of  Wildfires by Location */
+SELECT Location, count(*) AS Wildfire_count
+FROM California
+GROUP BY Location
+ORDER BY Wildfire_count DESC;
+
+/* Wildfire with more than 50 Fatalities or Injuries */
+SELECT Incident_ID, Date, Location, Fatalities, Injuries
+FROM California
+WHERE Location + Injuries  &gt; 50
+ORDER BY Fatalities + Injuries DESC;
+
+/* Year with the most Area Burned */
+ SELECT substr(Date, 1, 4) AS Year, SUM(&quot;Area_Burned (Acres)&quot;) AS Total_Area_Burned
+ FROM California
+ GROUP BY substr(Date, 1, 4)
+ ORDER BY Total_Area_Burned DESC
+ LIMIT 1;
+ 
+ /* Wildfire Cause By Human Activity */
+ SELECT *
+ FROM California
+ WHERE Cause = 'Human Activity'
+ ORDER BY Date DESC;
+ 
+WITH CauseFrequency AS (
+    SELECT 
+        Location,
+        Cause,
+        COUNT(*) AS Incident_Count,
+        RANK() OVER (PARTITION BY Location ORDER BY COUNT(*) DESC) AS Rank
+    FROM California
+    GROUP BY Location, Cause
+)
+SELECT Location, Cause, Incident_Count
+FROM CauseFrequency
+WHERE Rank = 1;
+
+/* The most destructive wildfires by financial loss*/
+WITH RankedWildfires AS (
+    SELECT 
+        Incident_ID,
+        Location,
+        Date,
+        &quot;Estimated_Financial_Loss (Million $)&quot; ,
+        RANK() OVER (ORDER BY &quot;Estimated_Financial_Loss (Million $)&quot;  DESC) AS Rank
+    FROM California
+)
+SELECT *
+FROM RankedWildfires
+WHERE Rank &lt;= 5;</sql><current_tab id="0"/></tab_sql></sqlb_project>
